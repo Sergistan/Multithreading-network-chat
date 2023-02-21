@@ -2,20 +2,14 @@ package Client;
 
 import java.io.*;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 
 public class ClientThread {
     private Socket socket;
     private BufferedReader in;
     private BufferedWriter out;
     private BufferedReader inputUser;
-    private String host;
-    private int port;
-    private String nickname;
 
     public ClientThread(String host, int port) {
-        this.host = host;
-        this.port = port;
         try {
             this.socket = new Socket(host, port);
         } catch (IOException e) {
@@ -35,21 +29,24 @@ public class ClientThread {
 
         private void pressNickname() {
             try {
-                nickname = inputUser.readLine();
+                String nickname = inputUser.readLine();
                 out.write(nickname + "\n");
                 out.flush();
-            } catch (IOException ignored) {
+            } catch (IOException e) {
+                e.getStackTrace();
             }
         }
 
     private void downService() {
         try {
             if (!socket.isClosed()) {
-                socket.close();
                 in.close();
                 out.close();
+                socket.close();
             }
-        } catch (IOException ignored) {}
+        } catch (IOException e) {
+            e.getStackTrace();
+        }
     }
 
     private class ReadMsg extends Thread {
@@ -60,6 +57,7 @@ public class ClientThread {
                 while (true) {
                     str = in.readLine(); // ждем сообщения с сервера
                     if (str.equals("/exit")) {
+                        System.out.println(str);
                         ClientThread.this.downService(); // харакири
                         break; // выходим из цикла если пришло "stop"
                     }
@@ -72,7 +70,7 @@ public class ClientThread {
     }
 
     // нить отправляющая сообщения приходящие с консоли на сервер
-    public class WriteMsg extends Thread {
+    private class WriteMsg extends Thread {
 
         @Override
         public void run() {

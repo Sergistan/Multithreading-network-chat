@@ -2,8 +2,8 @@ package Server;
 
 import java.io.*;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.util.ConcurrentModificationException;
 import java.util.Date;
 
 public class ServerThread extends Thread {
@@ -34,17 +34,22 @@ public class ServerThread extends Thread {
             while (true) {
                 message = in.readLine();
                 if (message.equals("/exit")) {
-                    for (ServerThread vr : ChatServer.serverList) {
-                        vr.noticeExitUser(name);
+                    System.out.println("(" + dataTime + ") " + name + ": " + "left the chat");
+                    outLog.write("(" + dataTime + ") " + name + ": " + "left the chat" + "\n");
+                    for (ServerThread connection : ChatServer.serverList) {
+                        if (!connection.equals(this))
+                            connection.noticeExitUser(name);
                     }
                     this.downService();
                     break;
                 }
-                for (ServerThread vr : ChatServer.serverList) {
-                    vr.writeLog(name, message);
+                System.out.println("(" + dataTime + ") " + name + ": " + message);
+                outLog.write("(" + dataTime + ") " + name + ": " + message + "\n");
+                outLog.flush();
+                for (ServerThread connection : ChatServer.serverList) {
+                    connection.writeToUsers(name, message);
                 }
             }
-        } catch (NullPointerException ignored) {
         } catch (IOException e) {
             this.downService();
         }
@@ -53,25 +58,26 @@ public class ServerThread extends Thread {
     private void downService() {
         try {
             if(!socket.isClosed()) {
-                socket.close();
                 in.close();
                 out.close();
-                for (ServerThread vr : ChatServer.serverList) {
-                    if(vr.equals(this)){
-                        vr.interrupt();
+                outLog.close();
+                socket.close();
+                for (ServerThread connection : ChatServer.serverList) {
+                    if(connection.equals(this))
+                        connection.interrupt();
                     }
-                    ChatServer.serverList.remove(this);
-                }
             }
-        } catch (IOException ignored) {}
+        } catch (IOException e) {
+            e.getStackTrace();
+        }
     }
 
 
     private void writeYourName() {
         try {
-            System.out.println("(" + dataTime + ") " + "Перед тем как начать общаться напишите ваше имя!");
-            out.write("(" + dataTime + ") " + "Перед тем как начать общаться напишите ваше имя!" + "\n");
-            outLog.write("(" + dataTime + ") " + "Перед тем как начать общаться напишите ваше имя!" + "\n");
+            System.out.println("(" + dataTime + ") " + "Write your name!");
+            out.write("(" + dataTime + ") " + "Write your name!" + "\n");
+            outLog.write("(" + dataTime + ") " + "Write your name!" + "\n");
             out.flush();
             outLog.flush();
         } catch (IOException ignored) {
@@ -80,9 +86,9 @@ public class ServerThread extends Thread {
 
     private void noticeNewUser(String name) {
         try {
-            System.out.println("(" + dataTime + ") " + "В чат присоединился: " + name);
-            out.write("(" + dataTime + ") " + "В чат присоединился: " + name + "\n");
-            outLog.write("(" + dataTime + ") " + "В чат присоединился: " + name + "\n");
+            System.out.println("(" + dataTime + ") " + name + " joined the chat. Write something...");
+            out.write("(" + dataTime + ") " + name + " joined the chat. Write something..." + "\n");
+            outLog.write("(" + dataTime + ") " + name + " joined the chat. Write something..." + "\n");
             out.flush();
             outLog.flush();
         } catch (IOException ignored) {
@@ -91,22 +97,16 @@ public class ServerThread extends Thread {
 
     private void noticeExitUser(String name) {
         try {
-            System.out.println("(" + dataTime + ") " + name + ": " + "вышел из чата");
-            out.write("(" + dataTime + ") " + name + ": " + "вышел из чата" + "\n");
-            outLog.write("(" + dataTime + ") " + name + ": " + "вышел из чата" + "\n");
+            out.write("(" + dataTime + ") " + name + ": " + "left the chat" + "\n");
             out.flush();
-            outLog.flush();
         } catch (IOException ignored) {
         }
     }
 
-    private void writeLog(String name, String message) {
+    private void writeToUsers(String name, String message) {
         try {
-            System.out.println("(" + dataTime + ") " + name + ": " + message);
             out.write("(" + dataTime + ") " + name + ": " + message + "\n");
-            outLog.write("(" + dataTime + ") " + name + ": " + message + "\n");
             out.flush();
-            outLog.flush();
         } catch (IOException ignored) {
         }
     }

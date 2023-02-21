@@ -11,9 +11,8 @@ public class ChatServer {
 
     public static void main(String[] args) throws IOException {
 
-        ServerSocket server = new ServerSocket(ChatServer.parsePort());
-        System.out.println("Server Started");
-        try {
+        try (ServerSocket server = new ServerSocket(ChatServer.parsePort())) {
+            System.out.println("Server Started");
             while (true) {
                 Socket socket = server.accept();
                 try {
@@ -22,8 +21,6 @@ public class ChatServer {
                     socket.close();
                 }
             }
-        } finally {
-            server.close();
         }
     }
 

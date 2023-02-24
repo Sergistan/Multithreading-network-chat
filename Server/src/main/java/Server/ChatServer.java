@@ -3,11 +3,11 @@ package Server;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ChatServer {
 
-    public static ArrayList<ServerThread> serverList = new ArrayList<>();
+    public static CopyOnWriteArrayList<ServerThread> serverList = new CopyOnWriteArrayList<>();
 
     public static void main(String[] args) throws IOException {
 

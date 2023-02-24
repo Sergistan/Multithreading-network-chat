@@ -3,7 +3,6 @@ package Server;
 import java.io.*;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
-import java.util.ConcurrentModificationException;
 import java.util.Date;
 
 public class ServerThread extends Thread {
@@ -57,15 +56,16 @@ public class ServerThread extends Thread {
 
     private void downService() {
         try {
-            if(!socket.isClosed()) {
+            if (!socket.isClosed()) {
                 in.close();
                 out.close();
                 outLog.close();
                 socket.close();
                 for (ServerThread connection : ChatServer.serverList) {
-                    if(connection.equals(this))
+                    if (connection.equals(this))
                         connection.interrupt();
-                    }
+                    ChatServer.serverList.remove(this);
+                }
             }
         } catch (IOException e) {
             e.getStackTrace();
